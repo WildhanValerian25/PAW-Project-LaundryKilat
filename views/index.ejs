@@ -1,0 +1,161 @@
+<%- include('partials/head', { judul: judul }) %>
+<body class="bg-slate-50 text-slate-700">
+
+  <!-- Navbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+    <div class="max-w-4xl mx-auto px-5 py-4 flex justify-between items-center">
+      <a href="/" class="text-xl font-bold text-blue-600"><%= namaApp %></a>
+      <nav class="flex gap-6 text-sm font-medium text-slate-500">
+        <a href="#layanan" class="hover:text-blue-600 transition">Layanan</a>
+        <a href="#pesan" class="hover:text-blue-600 transition">Form Pemesanan</a>
+        <a href="#status" class="hover:text-blue-600 transition">Status Server</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto px-5 pt-12 pb-20">
+
+    <!-- Hero -->
+    <section class="mb-14">
+      <h1 class="text-3xl md:text-4xl font-bold text-slate-800"><%= tagline %></h1>
+      <p class="mt-3 text-slate-500 max-w-xl">
+        Pilih paket layanan, isi formulir, dan cucianmu langsung kami proses.
+      </p>
+    </section>
+
+    <!-- Daftar layanan: dirender EJS dari data Model di backend -->
+    <section id="layanan" class="mb-16 scroll-mt-24">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-slate-800 mb-1">Paket Layanan</h2>
+        <p class="text-slate-500 text-sm">
+          Data berasal dari backend (<code>models/produkModel.js</code>), sama dengan isi endpoint
+          <a href="/api/produk" class="text-blue-600 hover:underline">/api/produk</a>.
+        </p>
+      </div>
+
+      <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-5">
+        <% produk.forEach(function (p) { %>
+          <article class="bg-white p-5 rounded-xl border border-slate-200 flex flex-col hover:-translate-y-1 hover:shadow-lg transition">
+            <span class="self-start text-xs font-semibold uppercase tracking-wide text-blue-600 bg-blue-50 rounded px-2 py-1"><%= p.kategori %></span>
+            <h3 class="mt-3 font-semibold text-slate-800"><%= p.nama %></h3>
+            <p class="mt-1 text-sm text-slate-500 flex-1"><%= p.deskripsi %></p>
+            <div class="mt-4 flex items-end justify-between">
+              <p class="text-blue-600 font-bold"><%= formatRupiah(p.harga) %><span class="text-xs font-normal text-slate-500">/<%= p.satuan %></span></p>
+              <p class="text-xs text-slate-500">Selesai <%= p.estimasi %></p>
+            </div>
+          </article>
+        <% }); %>
+      </div>
+    </section>
+
+    <!-- Form pemesanan (lanjutan Week 6) -->
+    <section id="pesan" class="mb-16 scroll-mt-24">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-slate-800 mb-1">Formulir Pemesanan</h2>
+        <p class="text-slate-500 text-sm">Lengkapi detail di bawah ini. Tanda <span class="text-red-500 font-bold">*</span> wajib diisi.</p>
+      </div>
+
+      <form id="laundryForm" class="bg-white p-8 rounded-xl shadow-sm border border-slate-200" novalidate>
+        <div class="mb-5 flex flex-col">
+          <label for="namaLengkap" class="mb-2 font-semibold text-sm">Nama Lengkap <span class="text-red-500">*</span></label>
+          <input type="text" id="namaLengkap" placeholder="Masukkan nama lengkap Anda"
+                 class="p-3 border border-slate-300 rounded-lg bg-slate-50 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition">
+        </div>
+
+        <div class="mb-5 flex flex-col">
+          <label for="nomorWA" class="mb-2 font-semibold text-sm">Nomor WhatsApp <span class="text-red-500">*</span></label>
+          <input type="tel" id="nomorWA" inputmode="numeric" placeholder="Contoh: 08123456789"
+                 class="p-3 border border-slate-300 rounded-lg bg-slate-50 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition">
+        </div>
+
+        <div class="mb-6 flex flex-col">
+          <label for="paketLaundry" class="mb-2 font-semibold text-sm">Paket Layanan <span class="text-red-500">*</span></label>
+          <!-- Opsi paket juga diambil dari data backend, bukan ditulis manual -->
+          <select id="paketLaundry"
+                  class="p-3 border border-slate-300 rounded-lg bg-slate-50 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 transition">
+            <option value="" disabled selected>-- Pilih jenis paket --</option>
+            <% produk.forEach(function (p) { %>
+              <option value="<%= p.nama %>"><%= p.nama %> (<%= formatRupiah(p.harga) %>/<%= p.satuan %>)</option>
+            <% }); %>
+          </select>
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition active:scale-[0.98]">
+          Kirim Pesanan Sekarang
+        </button>
+      </form>
+
+      <div id="pesanOutput" class="hidden mt-5 p-4 rounded-lg font-semibold text-sm" role="status"></div>
+    </section>
+
+    <!-- Status server: diambil dari /api/status dengan Fetch API -->
+    <section id="status" class="scroll-mt-24">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-slate-800 mb-1">Status Server</h2>
+        <p class="text-slate-500 text-sm">Respons asli dari endpoint <a href="/api/status" class="text-blue-600 hover:underline">/api/status</a>.</p>
+      </div>
+      <div class="bg-slate-800 text-white rounded-xl p-6 font-mono text-sm">
+        <div class="flex items-center justify-between mb-4">
+          <span class="font-semibold">GET /api/status</span>
+          <span class="flex items-center gap-2">
+            <span id="status-dot" class="h-2.5 w-2.5 rounded-full bg-white/40"></span>
+            <span id="status-label">Menghubungi server</span>
+          </span>
+        </div>
+        <pre id="status-output" class="whitespace-pre-wrap break-words text-emerald-300">...</pre>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    // ===== DOM & Event Handling form (dari Week 6) =====
+    const formLaundry = document.getElementById('laundryForm');
+    const outputPesan = document.getElementById('pesanOutput');
+
+    formLaundry.addEventListener('submit', function (event) {
+      event.preventDefault();
+      const nama = document.getElementById('namaLengkap').value.trim();
+      const noWA = document.getElementById('nomorWA').value.trim();
+      const paket = document.getElementById('paketLaundry').value;
+
+      if (nama.length < 3) {
+        return tampilkanPesan('Gagal: Nama pelanggan minimal harus 3 karakter!', 'error');
+      }
+      if (!/^0\d{9,13}$/.test(noWA)) {
+        return tampilkanPesan('Gagal: Nomor WhatsApp harus angka, diawali 0, dan 10 sampai 14 digit!', 'error');
+      }
+      if (!paket) {
+        return tampilkanPesan('Gagal: Pilih paket layanan terlebih dahulu!', 'error');
+      }
+
+      tampilkanPesan(`Berhasil! Pesanan ${paket} atas nama ${nama} (WA: ${noWA}) akan segera diproses.`, 'success');
+      formLaundry.reset();
+    });
+
+    function tampilkanPesan(teks, tipe) {
+      outputPesan.textContent = teks;
+      outputPesan.className = tipe === 'error'
+        ? 'mt-5 p-4 rounded-lg font-semibold text-sm bg-red-50 text-red-600 border border-red-200'
+        : 'mt-5 p-4 rounded-lg font-semibold text-sm bg-green-50 text-green-700 border border-green-200';
+    }
+
+    // ===== Fetch API ke backend sendiri: /api/status =====
+    (async function () {
+      const output = document.getElementById('status-output');
+      const label = document.getElementById('status-label');
+      const dot = document.getElementById('status-dot');
+      try {
+        const res = await fetch('/api/status');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        output.textContent = JSON.stringify(data, null, 2);
+        label.textContent = 'Server berjalan';
+        dot.className = 'h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse';
+      } catch (err) {
+        output.textContent = `Gagal menghubungi /api/status: ${err.message}`;
+        label.textContent = 'Tidak terhubung';
+      }
+    })();
+  </script>
+
+<%- include('partials/footer') %>
