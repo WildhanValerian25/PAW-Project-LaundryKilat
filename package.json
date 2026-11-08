@@ -1,0 +1,16 @@
+{
+  "name": "paw-project-laundrykilat",
+  "version": "1.0.0",
+  "description": "Project PAW: aplikasi web Laundry Kilat dengan Express.js, EJS, Tailwind CDN, dan pola MVC",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node --watch app.js"
+  },
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "pg": "^8.23.1"
+  }
+}
