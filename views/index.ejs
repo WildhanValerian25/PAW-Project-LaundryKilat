@@ -10,6 +10,9 @@
     
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-sm">
         <div class="text-xl font-bold text-blue-600">Laundry Kilat</div>
+        <button type="button" onclick="bukaChat()" class="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-2">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Tanya Asisten AI
+        </button>
     </header>
 
     <main class="max-w-6xl mx-auto mt-10 px-5">
@@ -182,6 +185,263 @@ crudForm.addEventListener('submit', async (e) => {
         }
 
         fetchProducts();
+    </script>
+    <!-- ================= Week 9: AI Assistant (Gemini) ================= -->
+    <!-- Tombol melayang untuk membuka chat -->
+    <button id="chatToggle" type="button" onclick="bukaChat()" aria-label="Buka asisten AI"
+        class="fixed bottom-5 right-5 z-40 flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm pl-4 pr-5 py-3 rounded-full shadow-lg transition">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.86 9.86 0 01-4-.8L3 20l1.3-3.9A7.6 7.6 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        Tanya Kilo
+    </button>
+
+    <!-- Panel chat: layar penuh di HP, jendela kecil di desktop -->
+    <section id="chatPanel" role="dialog" aria-label="Asisten AI Laundry Kilat"
+        class="hidden fixed z-50 inset-0 sm:inset-auto sm:bottom-5 sm:right-5 sm:w-[380px] sm:h-[580px] sm:max-h-[calc(100vh-2.5rem)] bg-white sm:rounded-2xl shadow-2xl border border-slate-200 flex-col overflow-hidden">
+
+        <!-- Header panel -->
+        <div class="flex items-center justify-between px-4 py-3 bg-blue-600 text-white">
+            <div class="flex items-center gap-3">
+                <div class="h-9 w-9 rounded-full bg-white/20 flex items-center justify-center font-bold">K</div>
+                <div>
+                    <p class="font-semibold leading-tight">Kilo · Asisten Laundry Kilat</p>
+                    <p class="text-xs text-blue-100">Menjawab seputar layanan, harga, dan estimasi</p>
+                </div>
+            </div>
+            <button type="button" onclick="tutupChat()" aria-label="Tutup chat" class="p-1 rounded hover:bg-white/20 transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+                </svg>  
+            </button>
+        </div>
+
+        <!-- Daftar pesan -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50" aria-live="polite">
+            <div class="flex">
+                <div class="max-w-[85%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm text-slate-700">
+                    Halo! Aku Kilo, asisten virtual Laundry Kilat. Tanyakan apa saja tentang layanan, harga, atau estimasi pengerjaan.
+                </div>
+            </div>
+        </div>
+
+        <!-- Saran pertanyaan -->
+        <div id="chatSuggestions" class="flex flex-wrap gap-2 px-4 py-2 bg-slate-50 border-t border-slate-100"> 
+            <button type="button" class="chat-chip shrink-0 text-xs bg-white border border-blue-200 text-blue-700 rounded-full px-3 py-1.5 hover:bg-blue-50 transition">Layanan apa saja yang tersedia?</button>
+            <button type="button" class="chat-chip shrink-0 text-xs bg-white border border-blue-200 text-blue-700 rounded-full px-3 py-1.5 hover:bg-blue-50 transition">Layanan mana yang paling cepat?</button>
+            <button type="button" class="chat-chip shrink-0 text-xs bg-white border border-blue-200 text-blue-700 rounded-full px-3 py-1.5 hover:bg-blue-50 transition">Berapa biaya cuci 3 kg?</button>
+        </div>
+
+        <!-- Form input -->
+        <form id="chatForm" class="border-t border-slate-200 p-3 bg-white">
+            <div class="flex items-end gap-2">
+                <textarea id="chatInput" rows="1" maxlength="500" placeholder="Tulis pertanyaan..."
+                    class="flex-1 resize-none max-h-28 p-2.5 border border-slate-300 rounded-xl text-sm bg-slate-50 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"></textarea>
+                <button id="chatSend" type="submit" aria-label="Kirim pesan"
+                    class="h-10 w-10 shrink-0 flex items-center justify-center rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M13 6l6 6-6 6"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="flex justify-between mt-1.5 px-1 text-[11px] text-slate-400">
+                <span>Enter untuk kirim · Shift+Enter baris baru</span>
+                <span id="chatCounter">0/500</span>
+            </div>
+        </form>
+    </section>
+
+    <script>
+        // ===== Week 9: AI Assistant =====
+        const CHAT_URL = '/api/chat';
+        const MAKS_KARAKTER = 500;
+        const chatPanel = document.getElementById('chatPanel');
+        const chatToggle = document.getElementById('chatToggle');
+        const chatMessages = document.getElementById('chatMessages');
+        const chatForm = document.getElementById('chatForm');
+        const chatInput = document.getElementById('chatInput');
+        const chatSend = document.getElementById('chatSend');
+        const chatCounter = document.getElementById('chatCounter');
+        let sedangMemproses = false;
+
+        function bukaChat() {
+            chatPanel.classList.remove('hidden');
+            chatPanel.classList.add('flex');
+            chatToggle.classList.add('hidden');
+            chatInput.focus();
+        }
+
+        function tutupChat() {
+            chatPanel.classList.add('hidden');
+            chatPanel.classList.remove('flex');
+            chatToggle.classList.remove('hidden');
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !chatPanel.classList.contains('hidden')) tutupChat();
+        });
+
+        function gulirKeBawah() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Teks AI ditampilkan dengan textContent (bukan innerHTML) supaya aman dari XSS.
+        // Baris yang diawali "- " diubah menjadi daftar berbutir.
+        function isiTeksAman(elemen, teks) {
+            let daftar = null;
+            teks.split('\n').forEach((baris) => {
+                const bersih = baris.trim();
+                if (!bersih) { daftar = null; return; }
+                if (/^[-*•]\s+/.test(bersih)) {
+                    if (!daftar) {
+                        daftar = document.createElement('ul');
+                        daftar.className = 'list-disc pl-5 space-y-0.5 my-1';
+                        elemen.appendChild(daftar);
+                    }
+                    const li = document.createElement('li');
+                    li.textContent = bersih.replace(/^[-*•]\s+/, '');
+                    daftar.appendChild(li);
+                } else {
+                    daftar = null;
+                    const p = document.createElement('p');
+                    p.textContent = bersih;
+                    elemen.appendChild(p);
+                }
+            });
+        }
+
+        function tambahPesan(peran, teks) {
+            const baris = document.createElement('div');
+            baris.className = peran === 'user' ? 'flex justify-end' : 'flex';
+            const gelembung = document.createElement('div');
+            gelembung.className = peran === 'user'
+                ? 'max-w-[85%] bg-blue-600 text-white rounded-2xl rounded-tr-sm px-4 py-2.5 text-sm whitespace-pre-wrap break-words'
+                : 'max-w-[85%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm text-slate-700 space-y-1 break-words';
+            if (peran === 'user') gelembung.textContent = teks;
+            else isiTeksAman(gelembung, teks);
+            baris.appendChild(gelembung);
+            chatMessages.appendChild(baris);
+            gulirKeBawah();
+        }
+
+        function tambahError(teks, pesanUlang) {
+            const baris = document.createElement('div');
+            baris.className = 'flex';
+            const kotak = document.createElement('div');
+            kotak.className = 'max-w-[85%] bg-red-50 border border-red-200 text-red-700 rounded-2xl rounded-tl-sm px-4 py-2.5 text-sm';
+            const p = document.createElement('p');
+            p.textContent = teks;
+            kotak.appendChild(p);
+            if (pesanUlang) {
+                const tombol = document.createElement('button');
+                tombol.type = 'button';
+                tombol.className = 'mt-2 text-xs font-semibold underline hover:no-underline';
+                tombol.textContent = 'Coba lagi';
+                tombol.onclick = () => { baris.remove(); kirimPesan(pesanUlang, false); };
+                kotak.appendChild(tombol);
+            }
+            baris.appendChild(kotak);
+            chatMessages.appendChild(baris);
+            gulirKeBawah();
+        }
+
+        function tampilkanLoading() {
+            const baris = document.createElement('div');
+            baris.id = 'chatLoading';
+            baris.className = 'flex';
+            baris.innerHTML = `
+                <div class="bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-4 py-3 flex items-center gap-2 text-xs text-slate-500">
+                    <span class="flex gap-1">
+                        <span class="h-2 w-2 rounded-full bg-blue-400 animate-bounce"></span>
+                        <span class="h-2 w-2 rounded-full bg-blue-400 animate-bounce [animation-delay:150ms]"></span>
+                        <span class="h-2 w-2 rounded-full bg-blue-400 animate-bounce [animation-delay:300ms]"></span>
+                    </span>
+                    Kilo sedang mengetik...
+                </div>`;
+            chatMessages.appendChild(baris);
+            gulirKeBawah();
+        }
+
+        function sembunyikanLoading() {
+            const el = document.getElementById('chatLoading');
+            if (el) el.remove();
+        }
+
+        function aturStatusKirim(memproses) {
+            sedangMemproses = memproses;
+            chatSend.disabled = memproses;
+            chatInput.disabled = memproses;
+            document.querySelectorAll('.chat-chip').forEach((b) => (b.disabled = memproses));
+        }
+
+        // Kirim pertanyaan ke backend (bukan langsung ke Gemini)
+        async function kirimPesan(teks, tampilkanBubbleUser = true) {
+            const pesan = teks.trim();
+            if (!pesan || sedangMemproses) return;
+            if (pesan.length > MAKS_KARAKTER) {
+                tambahError(`Pesan terlalu panjang. Maksimal ${MAKS_KARAKTER} karakter.`);
+                return;
+            }
+
+            if (tampilkanBubbleUser) tambahPesan('user', pesan);
+            aturStatusKirim(true);
+            tampilkanLoading();
+
+            try {
+                const res = await fetch(CHAT_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: pesan }),
+                });
+
+                let data = null;
+                try { data = await res.json(); } catch (_) { /* respons bukan JSON */ }
+
+                sembunyikanLoading();
+
+                if (res.ok && data && data.success) {
+                    tambahPesan('ai', data.data.reply);
+                } else {
+                    const pesanError = (data && data.error && data.error.message) || `Terjadi kesalahan (HTTP ${res.status}).`;
+                    // Error validasi tidak perlu tombol "Coba lagi"
+                    const bisaDiulang = res.status >= 429;
+                    tambahError(pesanError, bisaDiulang ? pesan : null);
+                }
+            } catch (err) {
+                sembunyikanLoading();
+                tambahError('Tidak dapat terhubung ke server. Periksa koneksi lalu coba lagi.', pesan);
+            } finally {
+                aturStatusKirim(false);
+                chatInput.focus();
+            }
+        }
+
+        chatForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const teks = chatInput.value;
+            chatInput.value = '';
+            perbaruiInput();
+            kirimPesan(teks);
+        });
+
+        // Enter = kirim, Shift+Enter = baris baru
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                chatForm.requestSubmit();
+            }
+        });
+
+        function perbaruiInput() {
+            chatCounter.textContent = `${chatInput.value.length}/${MAKS_KARAKTER}`;
+            chatInput.style.height = 'auto';
+            chatInput.style.height = Math.min(chatInput.scrollHeight, 112) + 'px';
+        }
+        chatInput.addEventListener('input', perbaruiInput);
+
+        document.querySelectorAll('.chat-chip').forEach((tombol) => {
+            tombol.addEventListener('click', () => kirimPesan(tombol.textContent));
+        });
     </script>
 </body>
 </html>

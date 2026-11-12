@@ -9,12 +9,15 @@ const pool = new Pool({
     port: process.env.DB_PORT || 5432,
 });
 
-pool.connect((err) => {
-    if (err) {
-        console.error('Koneksi Database Gagal!', err.stack);
-    } else {
-        console.log('Berhasil terhubung ke Database PostgreSQL');
-    }
+// Tanpa handler ini, server akan crash kalau koneksi database terputus
+// (misalnya PostgreSQL di-restart). Dengan handler ini server tetap hidup.
+pool.on('error', (err) => {
+    console.error('Koneksi database terputus:', err.message);
 });
+
+// Cek koneksi sekali saat server menyala, lalu kembalikan koneksi ke pool.
+pool.query('SELECT 1')
+    .then(() => console.log('Berhasil terhubung ke Database PostgreSQL'))
+    .catch((err) => console.error('Koneksi Database Gagal!', err.message));
 
 module.exports = pool;
