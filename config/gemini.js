@@ -11,9 +11,11 @@ module.exports = {
 
   // Suhu rendah supaya jawaban konsisten dan tidak "mengarang".
   temperature: 0.2,
-  maxOutputTokens: 1024,
 
-  // Batas waktu menunggu respons Gemini (milidetik).
+  // Batas panjang jawaban (jangan di bawah 512 agar JSON tidak terpotong).
+  maxOutputTokens: 512,
+
+  // Batas waktu menunggu respons Gemini (milidetik). 20000 = 20 detik.
   timeoutMs: 20000,
 
   // Batas input pengguna (dipakai middleware validateChatInput).
